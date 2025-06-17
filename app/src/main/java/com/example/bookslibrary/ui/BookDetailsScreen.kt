@@ -52,7 +52,7 @@ fun BookDetailsScreen(book: Book, onBack: () -> Unit) {
             }
             Image(
                 painter = painter,
-                contentDescription = null,
+                contentDescription = stringResource(R.string.cover_desc, book.title),
                 modifier = Modifier
                     .size(180.dp)
                     .clip(RoundedCornerShape(16.dp)),

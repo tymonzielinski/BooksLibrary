@@ -10,4 +10,6 @@
     <string name="back">Back</string>
     <string name="favourite">Favourite</string>
     <string name="logo_desc">Logo</string>
+    <string name="error_loading">Error loading data. Please try again.</string>
+    <string name="cover_desc">Book cover: %1$s</string>
 </resources>

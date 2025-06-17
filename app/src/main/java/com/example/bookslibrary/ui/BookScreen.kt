@@ -49,6 +49,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.material3.TextFieldDefaults
 import com.example.bookslibrary.ui.theme.TextSecondary
 import kotlinx.coroutines.delay
+import androidx.compose.animation.slideOutHorizontally
 
 @Composable
 fun BooksScreen(viewModel: BooksViewModel) {
@@ -60,6 +61,7 @@ fun BooksScreen(viewModel: BooksViewModel) {
     val books by viewModel.books.collectAsState()
     val favorites by viewModel.favorites.collectAsState()
     val suggested by viewModel.suggested.collectAsState()
+    val error by viewModel.error.collectAsState()
     var selectedBook by remember { mutableStateOf<Book?>(null) }
     var query by remember { mutableStateOf(TextFieldValue("")) }
 
@@ -132,9 +134,16 @@ fun BooksScreen(viewModel: BooksViewModel) {
             }
         }
     ) { padding ->
-        if (selectedBook != null) {
-            BookDetailsScreen(book = selectedBook!!, onBack = { selectedBook = null })
-        } else {
+        AnimatedVisibility(
+            visible = selectedBook != null,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically() + slideOutHorizontally(targetOffsetX = { it })
+        ) {
+            if (selectedBook != null) {
+                BookDetailsScreen(book = selectedBook!!, onBack = { selectedBook = null })
+            }
+        }
+        if (selectedBook == null) {
             Crossfade(targetState = selectedTab) { tab ->
                 when (tab) {
                     0 -> {
@@ -148,10 +157,23 @@ fun BooksScreen(viewModel: BooksViewModel) {
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Top
                         ) {
+                            if (error != null) {
+                                Text(
+                                    text = stringResource(
+                                        id = R.string.error_loading
+                                    ),
+                                    color = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 8.dp),
+                                    textAlign = TextAlign.Center
+                                )
+                            }
                             TextField(
                                 value = query,
                                 onValueChange = {
                                     query = it
+                                    viewModel.clearError()
                                     viewModel.search(it.text)
                                 },
                                 label = { Text(stringResource(R.string.search_hint)) },
@@ -238,6 +260,18 @@ fun BooksScreen(viewModel: BooksViewModel) {
                                 .padding(padding)
                                 .padding(16.dp)
                         ) {
+                            if (error != null) {
+                                Text(
+                                    text = stringResource(
+                                        id = R.string.error_loading
+                                    ),
+                                    color = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 8.dp),
+                                    textAlign = TextAlign.Center
+                                )
+                            }
                             if (favorites.isEmpty()) {
                                 Text(
                                     stringResource(R.string.no_favorites),
@@ -310,7 +344,7 @@ fun BookItem(
             }
             Image(
                 painter = painter,
-                contentDescription = null,
+                contentDescription = stringResource(R.string.cover_desc, book.title),
                 modifier = Modifier
                     .size(64.dp)
                     .clip(RoundedCornerShape(12.dp)),

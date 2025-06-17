@@ -17,6 +17,9 @@ class BooksViewModel(private val repository: BookRepository) : ViewModel() {
     private val _suggested = MutableStateFlow<List<Book>>(emptyList())
     val suggested: StateFlow<List<Book>> = _suggested
 
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error
+
     init {
         refreshFavorites()
         fetchSuggestedBooks()
@@ -26,8 +29,10 @@ class BooksViewModel(private val repository: BookRepository) : ViewModel() {
         viewModelScope.launch {
             try {
                 _suggested.value = repository.getNewestBooks()
+                _error.value = null
             } catch (e: Exception) {
                 _suggested.value = emptyList()
+                _error.value = "error_loading"
             }
         }
     }
@@ -36,11 +41,14 @@ class BooksViewModel(private val repository: BookRepository) : ViewModel() {
         viewModelScope.launch {
             if (query.length < 2) {
                 _books.value = emptyList()
+                _error.value = null
             } else {
                 try {
                     _books.value = repository.searchBooks(query)
+                    _error.value = null
                 } catch (e: Exception) {
                     _books.value = emptyList()
+                    _error.value = "error_loading"
                 }
             }
         }
@@ -64,5 +72,9 @@ class BooksViewModel(private val repository: BookRepository) : ViewModel() {
         viewModelScope.launch {
             _favorites.value = repository.getFavoriteBooks()
         }
+    }
+
+    fun clearError() {
+        _error.value = null
     }
 }

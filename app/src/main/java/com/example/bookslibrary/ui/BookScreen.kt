@@ -1,5 +1,11 @@
 package com.example.bookslibrary.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -33,21 +39,27 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
+import androidx.compose.ui.res.stringResource
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.shadow
 import androidx.compose.material3.TextFieldDefaults
+import com.example.bookslibrary.ui.theme.TextSecondary
+import kotlinx.coroutines.delay
 
 @Composable
 fun BooksScreen(viewModel: BooksViewModel) {
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Search", "Favorites")
+    val tabs = listOf(
+        stringResource(R.string.search_tab),
+        stringResource(R.string.favorites_tab)
+    )
     val books by viewModel.books.collectAsState()
     val favorites by viewModel.favorites.collectAsState()
+    val suggested by viewModel.suggested.collectAsState()
     var selectedBook by remember { mutableStateOf<Book?>(null) }
     var query by remember { mutableStateOf(TextFieldValue("")) }
 
@@ -64,12 +76,12 @@ fun BooksScreen(viewModel: BooksViewModel) {
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.logo),
-                        contentDescription = "Logo",
+                        contentDescription = stringResource(R.string.logo_desc),
                         modifier = Modifier.size(32.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "BooksLibrary",
+                        text = stringResource(R.string.app_name),
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                     )
                 }
@@ -106,7 +118,7 @@ fun BooksScreen(viewModel: BooksViewModel) {
                                 selected = selectedTab == index,
                                 onClick = { selectedTab = index },
                                 selectedContentColor = MaterialTheme.colorScheme.primary,
-                                unselectedContentColor = MaterialTheme.colorScheme.onSecondary.copy(alpha = 0.5f),
+                                unselectedContentColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
                                 text = {
                                     Text(
                                         title,
@@ -123,99 +135,140 @@ fun BooksScreen(viewModel: BooksViewModel) {
         if (selectedBook != null) {
             BookDetailsScreen(book = selectedBook!!, onBack = { selectedBook = null })
         } else {
-            when (selectedTab) {
-                0 -> {
-                    // Search tab
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.background)
-                            .padding(padding)
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Top
-                    ) {
-                        TextField(
-                            value = query,
-                            onValueChange = {
-                                query = it
-                                viewModel.search(it.text)
-                            },
-                            label = { Text("Search for a book") },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Search,
-                                    contentDescription = "Search"
-                                )
-                            },
-                            shape = RoundedCornerShape(32.dp),
-                            colors = TextFieldDefaults.colors(
-                                unfocusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
-                                focusedContainerColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
-                                focusedIndicatorColor = Color.Transparent,
-                            ),
+            Crossfade(targetState = selectedTab) { tab ->
+                when (tab) {
+                    0 -> {
+                        // Search tab
+                        Column(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp)
-                                .shadow(4.dp, RoundedCornerShape(32.dp))
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        if (query.text.isBlank()) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .weight(1f),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Image(
-                                    painter = painterResource(id = R.drawable.logo),
-                                    contentDescription = "Logo",
-                                    modifier = Modifier
-                                        .size(120.dp)
-                                        .alpha(0.5f)
-                                )
-                            }
-                        } else {
-                            LazyColumn {
-                                items(books.size) { idx ->
-                                    val book = books[idx]
-                                    val isFavorite = favorites.any { it.id == book.id }
-                                    BookItem(
-                                        book = book.copy(isFavorite = isFavorite),
-                                        onFavorite = {
-                                            if (isFavorite) {
-                                                viewModel.removeFavorite(book)
-                                            } else {
-                                                viewModel.addFavorite(book)
-                                            }
-                                        },
-                                        onClick = { selectedBook = book }
+                                .fillMaxSize()
+                                .background(MaterialTheme.colorScheme.background)
+                                .padding(padding)
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Top
+                        ) {
+                            TextField(
+                                value = query,
+                                onValueChange = {
+                                    query = it
+                                    viewModel.search(it.text)
+                                },
+                                label = { Text(stringResource(R.string.search_hint)) },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Search,
+                                        contentDescription = stringResource(R.string.search_tab)
                                     )
+                                },
+                                shape = RoundedCornerShape(32.dp),
+                                colors = TextFieldDefaults.colors(
+                                    unfocusedContainerColor = MaterialTheme.colorScheme.surface.copy(
+                                        alpha = 0.7f
+                                    ),
+                                    focusedContainerColor = Color.Transparent,
+                                    unfocusedIndicatorColor = Color.Transparent,
+                                    focusedIndicatorColor = Color.Transparent,
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(56.dp)
+                                    .shadow(4.dp, RoundedCornerShape(32.dp))
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            if (query.text.isBlank()) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .weight(1f),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Top
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.new_releases),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        modifier = Modifier.padding(vertical = 8.dp)
+                                    )
+                                    LazyColumn {
+                                        items(suggested.size) { idx ->
+                                            val book = suggested[idx]
+                                            val isFavorite = favorites.any { it.id == book.id }
+                                            BookItem(
+                                                book = book.copy(isFavorite = isFavorite),
+                                                onFavorite = {
+                                                    if (isFavorite) {
+                                                        viewModel.removeFavorite(book)
+                                                    } else {
+                                                        viewModel.addFavorite(book)
+                                                    }
+                                                },
+                                                onClick = { selectedBook = book }
+                                            )
+                                        }
+                                    }
+                                }
+                            } else {
+                                LazyColumn {
+                                    items(books.size) { idx ->
+                                        val book = books[idx]
+                                        val isFavorite = favorites.any { it.id == book.id }
+                                        BookItem(
+                                            book = book.copy(isFavorite = isFavorite),
+                                            onFavorite = {
+                                                if (isFavorite) {
+                                                    viewModel.removeFavorite(book)
+                                                } else {
+                                                    viewModel.addFavorite(book)
+                                                }
+                                            },
+                                            onClick = { selectedBook = book }
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
-                }
-                1 -> {
-                    // Favorites tab
-                    Column(modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.background)
-                        .padding(padding)
-                        .padding(16.dp)) {
-                        if (favorites.isEmpty()) {
-                            Text("No favorites yet.", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
-                        } else {
-                            LazyColumn {
-                                items(favorites.size) { idx ->
-                                    BookItem(
-                                        book = favorites[idx].copy(isFavorite = true),
-                                        onFavorite = {
-                                            viewModel.removeFavorite(favorites[idx])
-                                        },
-                                        onClick = { selectedBook = favorites[idx] }
-                                    )
+
+                    1 -> {
+                        // Favorites tab
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(MaterialTheme.colorScheme.background)
+                                .padding(padding)
+                                .padding(16.dp)
+                        ) {
+                            if (favorites.isEmpty()) {
+                                Text(
+                                    stringResource(R.string.no_favorites),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = TextAlign.Center
+                                )
+                            } else {
+                                LazyColumn {
+                                    items(favorites.size, key = { favorites[it].id }) { idx ->
+                                        var visible by remember { mutableStateOf(true) }
+                                        val book = favorites[idx]
+                                        AnimatedVisibility(
+                                            visible = visible,
+                                            enter = fadeIn() + expandVertically(),
+                                            exit = fadeOut() + shrinkVertically()
+                                        ) {
+                                            BookItem(
+                                                book = book.copy(isFavorite = true),
+                                                onFavorite = {
+                                                    visible = false
+                                                },
+                                                onClick = { selectedBook = book }
+                                            )
+                                            if (!visible) {
+                                                LaunchedEffect(Unit) {
+                                                    delay(300)
+                                                    viewModel.removeFavorite(book)
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -235,15 +288,21 @@ fun BookItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
+            .padding(vertical = 8.dp)
             .clickable { onClick(book) },
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary
-        )
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Row(modifier = Modifier.padding(8.dp)) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .height(IntrinsicSize.Min),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             val painter = if (book.coverUrl.isNullOrBlank()) {
                 painterResource(id = R.drawable.no_cover)
             } else {
@@ -253,32 +312,28 @@ fun BookItem(
                 painter = painter,
                 contentDescription = null,
                 modifier = Modifier
-                    .size(60.dp)
+                    .size(64.dp)
                     .clip(RoundedCornerShape(12.dp)),
                 contentScale = ContentScale.Crop
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     book.title,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = MaterialTheme.typography.bodyMedium.fontSize
-                    ),
+                    style = MaterialTheme.typography.titleMedium,
                     maxLines = 2
                 )
                 Text(
                     book.author,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontSize = MaterialTheme.typography.labelSmall.fontSize
-                    ),
+                    style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary),
                     maxLines = 1
                 )
             }
             IconButton(onClick = { onFavorite(book) }) {
                 Icon(
                     imageVector = if (book.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                    contentDescription = "Favourite"
+                    contentDescription = stringResource(R.string.favourite),
+                    tint = if (book.isFavorite) MaterialTheme.colorScheme.primary else TextSecondary
                 )
             }
         }

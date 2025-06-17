@@ -4,14 +4,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 
-
 private val CustomColorScheme = lightColorScheme(
     primary = ButtonColor,
     onPrimary = ButtonContent,
     background = MainBackground,
-    surface = MainBackground,
-    onBackground = ButtonContent,
-    onSurface = ButtonContent,
+    surface = CardBackground,
+    onBackground = TextPrimary,
+    onSurface = TextPrimary,
     secondary = TabSelected,
     onSecondary = ButtonContent
 )

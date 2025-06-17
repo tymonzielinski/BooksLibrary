@@ -2,7 +2,10 @@ package com.example.bookslibrary.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val MainBackground = Color(0xFFF6E8BC)
-val ButtonColor = Color(0xFFE5C97B)
-val ButtonContent = Color(0xFF7D5A00)
-val TabSelected = Color(0xFFD6B36A)
+val MainBackground = Color(0xFFF9F9F9)
+val CardBackground = Color(0xFFFFFFFF)
+val ButtonColor = Color(0xFF4F46E5)
+val ButtonContent = Color(0xFFFFFFFF)
+val TabSelected = Color(0xFF6366F1)
+val TextPrimary = Color(0xFF1A1A1A)
+val TextSecondary = Color(0xFF6B7280)

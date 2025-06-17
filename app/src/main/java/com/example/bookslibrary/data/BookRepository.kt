@@ -27,4 +27,13 @@ class BookRepository(
     suspend fun removeFavorite(book: Book) {
         bookDao.insert(book.toEntity().copy(isFavorite = false))
     }
+
+    suspend fun getNewestBooks(): List<Book> {
+        val response = googleBooksApi.searchBooks(
+            query = "subject:psychology",
+            orderBy = "newest",
+            maxResults = 10
+        )
+        return response.items?.map { it.toBook() } ?: emptyList()
+    }
 }

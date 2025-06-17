@@ -18,6 +18,7 @@ import com.example.bookslibrary.R
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,7 +29,10 @@ fun BookDetailsScreen(book: Book, onBack: () -> Unit) {
                 title = { Text(book.title) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.back)
+                        )
                     }
                 }
             )
@@ -56,14 +60,14 @@ fun BookDetailsScreen(book: Book, onBack: () -> Unit) {
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "Author: ${book.author}",
+                text = stringResource(R.string.author, book.author),
                 style = MaterialTheme.typography.titleMedium,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = book.description ?: "No description available",
+                text = book.description ?: stringResource(R.string.no_description),
                 style = MaterialTheme.typography.bodyMedium
             )
         }

@@ -14,8 +14,22 @@ class BooksViewModel(private val repository: BookRepository) : ViewModel() {
     private val _favorites = MutableStateFlow<List<Book>>(emptyList())
     val favorites: StateFlow<List<Book>> = _favorites
 
+    private val _suggested = MutableStateFlow<List<Book>>(emptyList())
+    val suggested: StateFlow<List<Book>> = _suggested
+
     init {
         refreshFavorites()
+        fetchSuggestedBooks()
+    }
+
+    private fun fetchSuggestedBooks() {
+        viewModelScope.launch {
+            try {
+                _suggested.value = repository.getNewestBooks()
+            } catch (e: Exception) {
+                _suggested.value = emptyList()
+            }
+        }
     }
 
     fun search(query: String) {
